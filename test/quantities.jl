@@ -49,9 +49,9 @@ using Test
         solve!(flowstate, flowprob, 10 * dt)
         solve!(movestate, moveprob, 10 * dt)
 
-        # @run @test Quantities.streamfunction(flowprob)(flowstate) ≈ Quantities.streamfunction(moveprob)(movestate)
-        @run Quantities.streamfunction(flowprob)(flowstate)
-        @run Quantities.streamfunction(moveprob)(movestate)
+        @test Quantities.streamfunction(flowprob)(flowstate) ≈ Quantities.streamfunction(moveprob)(movestate)
+        # @run Quantities.streamfunction(flowprob)(flowstate)
+        # @run Quantities.streamfunction(moveprob)(movestate)
     end
 end
 

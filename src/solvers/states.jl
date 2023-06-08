@@ -230,12 +230,15 @@ function Quantities.streamfunction(
         u, v = qty.u
         instant = frame.f(state.t)
         @bp
-        v0, u0 = instant.v
+        u0, v0 = instant.v
+        u -= u0
+        v -= v0
+
         ψ = unflatten_circ(qty.ψ, fluid.gridindex, level)
 
         for i in axes(ψ, 3)
             xs, ys = coords[i]
-            @views ψ[:, :, i] .+= ((u - u0) * y - (v - v0) * x for (x, y) in Iterators.product(xs, ys))
+            @views ψ[:, :, i] .+= (u * y - v * x for (x, y) in Iterators.product(xs, ys))
         end
         @bp
         return ψ
