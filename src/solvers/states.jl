@@ -1,4 +1,4 @@
-using Debugger
+# using Debugger
 
 """
     PsiOmegaState
@@ -142,57 +142,14 @@ function Quantities.streamfunction(
 
     return grid_quantity(coords) do state::StatePsiOmegaGridCNAB
         qty = quantities(state)
-        @bp
-        u, v = qty.u
+        # @bp
+        v, u = qty.u
         ψ = unflatten_circ(qty.ψ, prob.fluid.gridindex, level)
         for i in axes(ψ, 3)
             xs, ys = coords[i]
             @views ψ[:, :, i] .+= (u * y - v * x for (x, y) in Iterators.product(xs, ys))
         end
 
-        return ψ
-    end
-end
-
-function temp_f(prob::Problem{PsiOmegaFluidGrid{CNAB,OffsetFrame{GlobalFrame}}}; level=all_levels(prob))
-    # TODO: Implement for moving domain
-    # return error("streamfunction not implemented for moving domains")
-
-    # Implementation for non-rotating motion:
-    fluid = prob.fluid
-    frame = fluid.frame
-    # grids = discretized(prob.fluid)
-
-    # global_fluid = PsiOmegaFluidGrid(conditions(fluid), baselevel(grids); scheme=timestep_scheme(fluid))
-    # absolute_prob = Problem(global_fluid, prob.bodies)
-    # absolute_ψ = Quantities.streamfunction(absolute_prob)
-
-    # relative_ψ = grid_quantity(coords) do state::StatePsiOmegaGridCNAB
-    #     for i in axes(ψ, 3)
-    #         xs, ys = coords[i]
-    #         @views ψ[:, :, i] .+= 
-
-    # return 
-    
-    # return absolute_ψ .+ relative_ψ
-
-    grids = discretized(fluid)
-    coords = [circ_ranges(sublevel(grids, lev)) for lev in level]
-
-    return grid_quantity(coords) do state::StatePsiOmegaGridCNAB
-        qty = quantities(state)
-
-        u, v = qty.u
-        instant = frame.f(state.t)
-        @bp
-        v0, u0 = instant.v
-        ψ = unflatten_circ(qty.ψ, fluid.gridindex, level)
-
-        for i in axes(ψ, 3)
-            xs, ys = coords[i]
-            @views ψ[:, :, i] .+= ((u - u0) * y - (v - v0) * x for (x, y) in Iterators.product(xs, ys))
-        end
-        @bp
         return ψ
     end
 end
@@ -206,47 +163,36 @@ function Quantities.streamfunction(
     # Implementation for non-rotating motion:
     fluid = prob.fluid
     frame = fluid.frame
-    # grids = discretized(prob.fluid)
-
-    # global_fluid = PsiOmegaFluidGrid(conditions(fluid), baselevel(grids); scheme=timestep_scheme(fluid))
-    # absolute_prob = Problem(global_fluid, prob.bodies)
-    # absolute_ψ = Quantities.streamfunction(absolute_prob)
-
-    # relative_ψ = grid_quantity(coords) do state::StatePsiOmegaGridCNAB
-    #     for i in axes(ψ, 3)
-    #         xs, ys = coords[i]
-    #         @views ψ[:, :, i] .+= 
-
-    # return 
-    
-    # return absolute_ψ .+ relative_ψ
 
     grids = discretized(fluid)
     coords = [circ_ranges(sublevel(grids, lev)) for lev in level]
-    @bp
+    # @bp
 
     return grid_quantity(coords) do state::StatePsiOmegaGridCNAB
         qty = quantities(state)
-        u, v = qty.u
+        v0, u0 = qty.u
         instant = frame.f(state.t)
-        @bp
-        u0, v0 = instant.v
-        u -= u0
-        v -= v0
+        # @bp
+        vframe, uframe = instant.v
+        u0 -= uframe
+        v0 -= vframe
+        cθ = instant.cθ
+        sθ = instant.sθ
+        Ω = instant.Ω
+        # Ox, Oy = instant.r
+
+        u = u0 * cθ - v0 * sθ
+        v = u0 * sθ + v0 * cθ
 
         ψ = unflatten_circ(qty.ψ, fluid.gridindex, level)
 
         for i in axes(ψ, 3)
             xs, ys = coords[i]
-            @views ψ[:, :, i] .+= (u * y - v * x for (x, y) in Iterators.product(xs, ys))
+            @views ψ[:, :, i] .+= ((u - Ω * x) * y - (v + Ω * y) * x for (x, y) in Iterators.product(xs, ys))
         end
-        @bp
+        # @bp
         return ψ
     end
-
-    
-    ψ = temp_f(prob; level)
-    return ψ
 end
 
 """
