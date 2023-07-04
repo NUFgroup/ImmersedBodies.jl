@@ -1,5 +1,3 @@
-# using Debugger
-
 """
     PsiOmegaState
 
@@ -142,7 +140,6 @@ function Quantities.streamfunction(
 
     return grid_quantity(coords) do state::StatePsiOmegaGridCNAB
         qty = quantities(state)
-        # @bp
         v, u = qty.u
         ψ = unflatten_circ(qty.ψ, prob.fluid.gridindex, level)
         for i in axes(ψ, 3)
@@ -166,21 +163,21 @@ function Quantities.streamfunction(
 
     grids = discretized(fluid)
     coords = [circ_ranges(sublevel(grids, lev)) for lev in level]
-    # @bp
 
     return grid_quantity(coords) do state::StatePsiOmegaGridCNAB
         qty = quantities(state)
         v0, u0 = qty.u
         instant = frame.f(state.t)
-        # @bp
         vframe, uframe = instant.v
+        
+        # Add the contributions of the frame's non-rotational motion to the stream velocity.
         u0 -= uframe
         v0 -= vframe
+        
+        # Use trig to find the streamfunction in the rotated reference frame.
         cθ = instant.cθ
         sθ = instant.sθ
         Ω = instant.Ω
-        # Ox, Oy = instant.r
-
         u = u0 * cθ - v0 * sθ
         v = u0 * sθ + v0 * cθ
 
@@ -190,7 +187,7 @@ function Quantities.streamfunction(
             xs, ys = coords[i]
             @views ψ[:, :, i] .+= ((u - Ω * x) * y - (v + Ω * y) * x for (x, y) in Iterators.product(xs, ys))
         end
-        # @bp
+
         return ψ
     end
 end
