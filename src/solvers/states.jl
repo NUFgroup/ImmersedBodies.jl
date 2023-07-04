@@ -140,8 +140,7 @@ function Quantities.streamfunction(
 
     return grid_quantity(coords) do state::StatePsiOmegaGridCNAB
         qty = quantities(state)
-
-        u, v = qty.u
+        v, u = qty.u
         ψ = unflatten_circ(qty.ψ, prob.fluid.gridindex, level)
         for i in axes(ψ, 3)
             xs, ys = coords[i]
@@ -156,7 +155,41 @@ function Quantities.streamfunction(
     prob::Problem{PsiOmegaFluidGrid{CNAB,OffsetFrame{GlobalFrame}}}; level=all_levels(prob)
 )
     # TODO: Implement for moving domain
-    return error("streamfunction not implemented for moving domains")
+    # return error("streamfunction not implemented for moving domains")
+
+    # Implementation for non-rotating motion:
+    fluid = prob.fluid
+    frame = fluid.frame
+
+    grids = discretized(fluid)
+    coords = [circ_ranges(sublevel(grids, lev)) for lev in level]
+
+    return grid_quantity(coords) do state::StatePsiOmegaGridCNAB
+        qty = quantities(state)
+        v0, u0 = qty.u
+        instant = frame.f(state.t)
+        vframe, uframe = instant.v
+        
+        # Add the contributions of the frame's non-rotational motion to the stream velocity.
+        u0 -= uframe
+        v0 -= vframe
+        
+        # Use trig to find the streamfunction in the rotated reference frame.
+        cθ = instant.cθ
+        sθ = instant.sθ
+        Ω = instant.Ω
+        u = u0 * cθ - v0 * sθ
+        v = u0 * sθ + v0 * cθ
+
+        ψ = unflatten_circ(qty.ψ, fluid.gridindex, level)
+
+        for i in axes(ψ, 3)
+            xs, ys = coords[i]
+            @views ψ[:, :, i] .+= ((u - Ω * x) * y - (v + Ω * y) * x for (x, y) in Iterators.product(xs, ys))
+        end
+
+        return ψ
+    end
 end
 
 """
