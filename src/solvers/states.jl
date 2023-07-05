@@ -169,11 +169,11 @@ function Quantities.streamfunction(
         v0, u0 = qty.u
         instant = frame.f(state.t)
         vframe, uframe = instant.v
-        
+
         # Add the contributions of the frame's non-rotational motion to the stream velocity.
         u0 -= uframe
         v0 -= vframe
-        
+
         # Use trig to find the streamfunction in the rotated reference frame.
         cθ = instant.cθ
         sθ = instant.sθ
@@ -185,7 +185,9 @@ function Quantities.streamfunction(
 
         for i in axes(ψ, 3)
             xs, ys = coords[i]
-            @views ψ[:, :, i] .+= ((u - Ω * x) * y - (v + Ω * y) * x for (x, y) in Iterators.product(xs, ys))
+            @views ψ[:, :, i] .+= (
+                (u - Ω * x) * y - (v + Ω * y) * x for (x, y) in Iterators.product(xs, ys)
+            )
         end
 
         return ψ
