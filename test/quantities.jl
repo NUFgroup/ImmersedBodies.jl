@@ -28,7 +28,7 @@ using Test
 
         movingframe = OffsetFrame(GlobalFrame()) do t
             r = (0.0, 0.0)
-            v = .- flow_vec
+            v = .-flow_vec
             θ = 0.0
             Ω = 0.0
             return OffsetFrameInstant(r, v, θ, Ω)
@@ -49,11 +49,13 @@ using Test
             Ω = 1.0
             return OffsetFrameInstant(r, v, θ + Ω * t, Ω)
         end
-        
+
         flowingfluid = PsiOmegaFluidGrid(flow, grids; scheme)
         nonflowingfluid = PsiOmegaFluidGrid(flow_0, grids; scheme, frame=movingframe)
         rotatedfluid = PsiOmegaFluidGrid(horizontalflow, grids; scheme, frame=rotatedframe)
-        horizontalfluid = PsiOmegaFluidGrid(horizontalflow, grids; scheme, frame=rotatingframe)
+        horizontalfluid = PsiOmegaFluidGrid(
+            horizontalflow, grids; scheme, frame=rotatingframe
+        )
 
         curve = Curves.Circle(0.5)
         stationarybody = RigidBody(partition(curve, flowingfluid))
@@ -87,7 +89,7 @@ using Test
 
         # Test for a stationary object at a given angular displacement
         @test Quantities.streamfunction(rotatedprob)(rotatedstate) ≈ basesf
-        
+
         smallcylinder = Curves.Circle(0.02)
 
         # Offset the frame by 10 * dt radians so that it is at 0 radians in 10 timesteps.
@@ -105,7 +107,9 @@ using Test
         # Expected stream function at (-0.98, 1.98)
         expectedsf = -relativeflow[1] * -0.98 + relativeflow[2] * 1.98
 
-        thisfluid = PsiOmegaFluidGrid(horizontalflow, grids; scheme, frame=offsetrotatingframe)
+        thisfluid = PsiOmegaFluidGrid(
+            horizontalflow, grids; scheme, frame=offsetrotatingframe
+        )
         smallcylinderbody = RigidBody(partition(smallcylinder, thisfluid))
         smallcylindergroup = BodyGroup([smallcylinderbody])
         smallcylinderprob = Problem(thisfluid, smallcylindergroup)
