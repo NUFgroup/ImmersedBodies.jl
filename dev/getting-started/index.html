@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Getting Started · ImmersedBodies</title><meta name="title" content="Getting Started · ImmersedBodies"/><meta property="og:title" content="Getting Started · ImmersedBodies"/><meta property="twitter:title" content="Getting Started · ImmersedBodies"/><meta name="description" content="Documentation for ImmersedBodies."/><meta property="og:description" content="Documentation for ImmersedBodies."/><meta property="twitter:description" content="Documentation for ImmersedBodies."/><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../search_index.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">ImmersedBodies</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li class="is-active"><a class="tocitem" href>Getting Started</a><ul class="internal"><li><a class="tocitem" href="#Installation"><span>Installation</span></a></li><li><a class="tocitem" href="#Example-Problem"><span>Example Problem</span></a></li></ul></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../examples/naca/">NACA</a></li></ul></li><li><span class="tocitem">Reference</span><ul><li><a class="tocitem" href="../reference/problems/">Problems</a></li><li><a class="tocitem" href="../reference/solving/">Solving</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Getting Started</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Getting Started</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/NUFgroup/ImmersedBodies.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/NUFgroup/ImmersedBodies.jl/blob/main/docs/src/getting-started.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Getting-Started"><a class="docs-heading-anchor" href="#Getting-Started">Getting Started</a><a id="Getting-Started-1"></a><a class="docs-heading-anchor-permalink" href="#Getting-Started" title="Permalink"></a></h1><h2 id="Installation"><a class="docs-heading-anchor" href="#Installation">Installation</a><a id="Installation-1"></a><a class="docs-heading-anchor-permalink" href="#Installation" title="Permalink"></a></h2><pre><code class="language-julia hljs">import Pkg; Pkg.add(url=&quot;https://github.com/NUFgroup/ImmersedBodies.jl&quot;)
+</code></pre><h2 id="Example-Problem"><a class="docs-heading-anchor" href="#Example-Problem">Example Problem</a><a id="Example-Problem-1"></a><a class="docs-heading-anchor-permalink" href="#Example-Problem" title="Permalink"></a></h2><p>First, load the <code>ImmersedBodies</code> package.</p><pre><code class="language-julia hljs">using ImmersedBodies</code></pre><p>Next, we define the fluid for the problem. The fluid domain is <code>nlevel</code> Cartesian grids that progressively double in scale. The smallest grid is at <span>$-1&lt;x&lt;1, -1.5&lt;y&lt;1.5$</span>. The fluid is specified with a Reynolds number of 200 and a freestream velocity of 1 along <span>$x$</span>. The grid step can be manually set by adding an <code>h</code> keyword argument to <code>fluid_grid</code>.</p><pre><code class="language-julia hljs">fluid = Fluid(
+    grid = fluid_grid(xlims = (-1.0, 2.0), ylims = (-1.5, 1.5), nlevel = 5),
+    Re = 200.0,
+    freestream_vel = t -&gt; (1.0, 0.0),
+)</code></pre><p>Next, we define the bodies. In this case, 2 cylinders with the same radius at different heights. Each body is a <a href="../reference/problems/#ImmersedBodies.StaticBody"><code>StaticBody</code></a>, meaning the body is stationary in the fluid grid. Each body is given a <a href="../reference/problems/#ImmersedBodies.Panels"><code>Panels</code></a> argument that specifies the points on the body. You can manually specify points to use, or use the <code>ImmersedBodies.Curves</code> module to automatically discretize a curve that will work with the fluid grid.</p><pre><code class="language-julia hljs">bodies = Bodies(
+    cyl1=StaticBody(
+        Panels(fluid.grid, Curves.Circle(r=0.5, center=(0.0, -0.75)))
+    ),
+    cyl2=StaticBody(
+        Panels(fluid.grid, Curves.Circle(r=0.5, center=(0.0, +0.75)))
+    ),
+)</code></pre><p>Next, the time-stepping scheme. Here we automatically compute the time step to hit a target <code>cfl</code> number based on a given maximum fluid velocity <code>Umax</code>.</p><pre><code class="language-julia hljs">scheme = default_scheme(fluid.grid; Umax=2.0, cfl=0.2)</code></pre><p>Finally, we combine the <code>fluid</code>, <code>bodies</code>, and <code>scheme</code> into the problem.</p><pre><code class="language-julia hljs">prob = Problem(; fluid, bodies, scheme)</code></pre><p>We now solve the problem from time <code>0</code> to <code>t</code> and specify values to save to an HDF5 file. There are interfaces to the HDF5 file format for many programming languages, so you can analyze the data in whichever language you prefer.</p><pre><code class="language-julia hljs">solve(
+    prob,
+    t=15.0,
+    save=SaveHDF5(
+        &quot;soln.h5&quot;,
+        &quot;problem&quot; =&gt; prob,
+        &quot;fluid&quot; =&gt; fluid_group(
+            prob,
+            TimestepRange(; step=200),
+            (x_velocity!, y_velocity!, vorticity!)
+        ),
+        &quot;bodies&quot; =&gt; body_group(
+            prob,
+            TimestepRange(; step=10),
+            (boundary_force!,)
+        ),
+        &quot;totals&quot; =&gt; body_group(
+            prob,
+            TimestepRange(; step=1),
+            (boundary_total_force!,)
+        ),
+    ),
+)</code></pre><p>Here is an example script for plotting the results in Julia with <a href="https://docs.makie.org/stable/">Makie</a>.</p><pre><code class="language-julia hljs">using HDF5
+using GLMakie
+
+file = h5open(&quot;soln.h5&quot;)
+
+# Load the positions of the two cylinders
+bodypos = NamedTuple(
+    name =&gt; read(file[&quot;problem/bodies/$name/positions&quot;]) for name in (:cyl1, :cyl2)
+)
+
+# Reference the vorticity dataset in the file. This doesn&#39;t load the data into memory until
+# we index it.
+vorticity_dset = file[&quot;fluid/vorticity&quot;]
+
+# The coords attribute stores the coordinates that correspond to the vorticity array. The
+# fields are `start`, `length`, and `step` to work directly with the `range` function.
+# `vort_coords[:, level]` are the coordinates on the `level`th subdomain.
+vort_coords = map(r -&gt; range(; r...), read_attribute(vorticity_dset, &quot;coords&quot;))
+
+# Set up the Makie plot
+fig = Figure(resolution = (800, 400))
+ax = Axis(fig[1, 1], aspect = DataAspect(), limits = ((-1.5, 8.5), (-2.5, 2.5)))
+
+# Plot contours of the vorticity in reverse order so that the smaller domains are plotted on
+# top
+levels = reverse(axes(vorticity_dset, 3))
+contours = map(levels) do lev
+    x, y = vort_coords[:, lev]
+    @views contourf!(
+        ax, x, y,
+        vorticity_dset[:, :, lev, end],
+        colormap = :RdBu,
+        levels = range(-5, 5, 12),
+        extendlow = :auto,
+        extendhigh = :auto,
+    )
+end
+
+Colorbar(fig[1, 2], contours[1])
+
+# Plot the cylinder bodies
+for pos in bodypos
+    poly!(ax, Point2.(eachrow(pos)), color = :gray)
+end
+
+# Create a gif by updating the vorticity plot
+times = axes(vorticity_dset, 4)
+record(fig, &quot;vorticity.gif&quot;, times; framerate = 20) do i
+    ω = vorticity_dset[:, :, :, i]
+    for (level, contour) in zip(levels, contours)
+        contour[3] = @view ω[:, :, level]
+    end
+end</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« Home</a><a class="docs-footer-nextpage" href="../examples/naca/">NACA »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="auto">Automatic (OS)</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.0.1 on <span class="colophon-date" title="Monday 18 September 2023 14:16">Monday 18 September 2023</span>. Using Julia version 1.9.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
