@@ -106,4 +106,39 @@
             @test sign(panels.xb[i1, 2]) != sign(panels.xb[i2, 2])
         end
     end
+
+    let
+        #Do I have to relabel the params?
+        params = NacaParams("23012")
+        @test params isa NACA5
+
+        (; l, p, q, xx) = params
+        @test l ≈ 0.3
+        @test p ≈ 3
+        @test q ≈ 0
+        @test xx ≈ 0.12
+
+        @test isclosed(NACA(params))
+    end
+
+    let
+        airfoil = Curves.naca"23012"
+
+        s_le = leading_edge(airfoil)
+        s_te = trailing_edge(airfoil)
+
+        @test airfoil(s_le) ≈ [0, 0] atol = 1e-8
+        @test airfoil(s_te) ≈ [1, 0] atol = 1e-8
+
+        n = 50
+        panels = partition(airfoil, n)
+        arclen = arclength(airfoil)
+
+        @test all(≈(arclen / n; rtol=0.1), panels.ds)
+
+        let i1 = 1 + floor(Int, n * s_le), i2 = i1 + 1
+            # Airfoil y coordinate swaps sign at leading edge
+            @test sign(panels.xb[i1, 2]) != sign(panels.xb[i2, 2])
+        end
+    end
 end

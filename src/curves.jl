@@ -11,7 +11,7 @@ using LinearAlgebra: I
 export Curve, ClosedCurve, OpenCurve, isclosed, arclength, partition
 export Transformation, translate, rotate, scale, TransformedCurve
 export LineSegment, Circle, ParameterizedCurve
-export NacaParams, NACA, NACA4, @naca_str, leading_edge, trailing_edge
+export NacaParams, NACA, NACA4, NACA5, @naca_str, leading_edge, trailing_edge
 
 """
     Curve
@@ -404,6 +404,96 @@ function _point(params::NACA4, s::Real)
     end
 
     yt = 5 * t * (a0 * sqrt(x) + a1 * x + a2 * x^2 + a3 * x^3 + a4 * x^4)
+
+    θ = atan(dyc)
+    z = SVector(x, yc)
+    dz = yt * SVector(-sin(θ), cos(θ))
+
+    s < 0.5 ? z + dz : z - dz
+end
+
+struct NACA5 <: NacaParams
+    l::Float64  #lift coeff . Multiply number by 3/20 to get Cl
+    p::Float64  # Location of max camber along chord . Divide number by 20 to get Location
+    q::Float64  # reflex or normal
+    xx::Float64   #max thickness
+end
+
+function NacaParams(::Val{5}, spec::String)
+    @assert all(isdigit, spec)
+    l = parse(Int8, spec[1]) * (3 / 20)
+    p = parse(Int8, spec[2])
+    q = parse(Int8, spec[3])
+    xx = parse(Int8, spec[4:5]) * 0.01
+    NACA5(l, p, q, xx)
+end
+
+function _point(params::NACA5, s::Real)
+    # Equations from http://airfoiltools.com/airfoil/naca5digit
+    (; l, p, q, xx) = params
+
+    β = 2 * π * s
+    x = 0.5 * (1 + cos(β))
+
+    #Getting r, k1,k2/k1 values
+    if (10 * p + q) == 10
+        r = 0.0580 * (l / 0.3)
+        k1 = 361.4 * (l / 0.3)
+    elseif (10 * p + q) == 20
+        r = 0.126 * (l / 0.3)
+        k1 = 51.64 * (l / 0.3)
+    elseif (10 * p + q) == 30
+        r = 0.2025 * (l / 0.3)
+        k1 = 15.957 * (l / 0.3)
+    elseif (10 * p + q) == 40
+        r = 0.2900 * (l / 0.3)
+        k1 = 6.643 * (l / 0.3)
+    elseif (10 * p + q) == 50
+        r = 0.3910 * (l / 0.3)
+        k1 = 3.23 * (l / 0.3)
+    elseif (10 * p + q) == 21
+        r = 0.1300 * (l / 0.3)
+        k1 = 51.99 * (l / 0.3)
+        k2k1 = 0.000764 * (l / 0.3)
+    elseif (10 * p + q) == 31
+        r = 0.217 * (l / 0.3)
+        k1 = 15.793 * (l / 0.3)
+        k2k1 = 0.00677 * (l / 0.3)
+    elseif (10 * p + q) == 41
+        r = 0.3180 * (l / 0.3)
+        k1 = 6.520 * (l / 0.3)
+        k2k1 = 0.0303 * (l / 0.3)
+    elseif (10 * p + q) == 51
+        r = 0.4410 * (l / 0.3)
+        k1 = 3.191 * (l / 0.3)
+        k2k1 = 0.1355 * (l / 0.3)
+    else
+        println("Wrong airfoil")
+    end
+
+    # NACA airfoil constants
+    a0 = 0.2969
+    a1 = -0.126
+    a2 = -0.3516
+    a3 = 0.2843
+    a4 = -0.1036  # closed trailing edge
+
+    #Defining camber line
+    if x < r && q == 0
+        yc = (k1 / 6) * (x^3 - 3 * r * (x^2) + (r^2) * (3 - r) * x)
+        dyc = (k1 / 6) * (3 * x^2 - 6 * r * x + (r^2) * (3 - r))
+    elseif x < r && q == 1
+        yc = (k1 / 6) * ((x - r)^3 - k2k1 * ((1 - r)^3) * x - (r^3) * x + r^3)
+        dyc = (k1 / 6) * (3 * (x - r)^2 - k2k1 * (1 - r)^3 - r^3)
+    elseif x > r && q == 0
+        yc = (k1 / 6) * (r^3) * (1 - x)
+        dyc = (-k1 / 6) * r^3
+    elseif x > r && q == 1
+        yc = (k1 / 6) * (k2k1 * (x - r)^3 - k2k1 * ((1 - r)^3) * x - (r^3) * x + r^3)
+        dyc = (k1 / 6) * (3 * k2k1 * (x - r)^2 - k2k1 * (1 - r)^3 - r^3)
+    end
+
+    yt = 5 * xx * (a0 * sqrt(x) + a1 * x + a2 * x^2 + a3 * x^3 + a4 * x^4)
 
     θ = atan(dyc)
     z = SVector(x, yc)
