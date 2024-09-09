@@ -155,7 +155,10 @@ struct PrescribedBody{F1,F2,F3} <: AbstractPrescribedBody
     x::F1
     v::F2
     ds::F3
+    auto_ds::Bool
 end
+
+PrescribedBody(n_panels, x, v, ds) = PrescribedBody(n_panels, x, v, ds, false)
 
 initial_pos!(xb, body::PrescribedBody) = body.x(xb, 0)
 initial_lengths!(ds, body::PrescribedBody) = body.ds(ds, 0)
@@ -587,6 +590,9 @@ function prescribe_motion!(
     body.x(panels.pos, t)
     body.v(panels.vel, t)
     body.ds(panels.len, t)
+    if body.auto_ds
+        ImmersedBodies.Solvers.recalculate_lengths!(panels)
+    end
 
     return nothing
 end
