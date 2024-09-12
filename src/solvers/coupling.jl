@@ -503,13 +503,17 @@ function (coupler::DeformingSurfaceCoupler)(state::StatePsiOmegaGridCNAB, qs)
 end
 
 function recalculate_lengths!(panels::PanelView)
-    # TODO: This ignores the last panel length like how the Fortran version does
-    # Is there a better way to do this?
+    # TODO: Use a better way to recalculate the lengths.
 
     for i in 1:(npanels(panels) - 1)
         dx = panels.pos[i + 1, 1] - panels.pos[i, 1]
         dy = panels.pos[i + 1, 2] - panels.pos[i, 2]
         panels.len[i] = hypot(dx, dy)
+    end
+
+    # Keep the previous length, unless it is zero.
+    if abs(panels.len[end]) < eps(eltype(panels.len))
+        panels.len[end] = panels.len[end-1]
     end
 
     return nothing
