@@ -235,10 +235,16 @@ function Base.show(io::IO, ::MIME"text/plain", line::LineSegment)
 end
 
 function partition(line::LineSegment, n::Integer)
-    @assert n > 1
+    @assert n > 0
 
-    xs, ys = (range(x1, x2, n) for (x1, x2) in zip(line.p1, line.p2))
-    ds = hypot(xs[2] - xs[1], ys[2] - ys[1])
+    if n > 1
+        xs, ys = (range(x1, x2, n) for (x1, x2) in zip(line.p1, line.p2))
+        ds = hypot(xs[2] - xs[1], ys[2] - ys[1])
+    else
+        # TEMP: only uses the endpoint if there's one point
+        xs, ys = (range(x1, x1, 1) for x1 in line.p2)
+        ds = norm(line.p2 - line.p1)
+    end
 
     points = [xs ys]
     lengths = fill(ds, n)
